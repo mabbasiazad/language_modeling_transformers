@@ -2,8 +2,8 @@ import os
 import sys
 
 script_dir = os.path.dirname( __file__ )
-mymodule_dir = os.path.join( script_dir, '..', 'formers')
-sys.path.append(mymodule_dir )
+mymodule_dir = os.path.join( script_dir, '..', 'src')
+sys.path.append(mymodule_dir)
 
 from transformer import CTransformer
 import torch
