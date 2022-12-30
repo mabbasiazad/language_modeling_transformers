@@ -1,11 +1,4 @@
-import os
-import sys
-
-script_dir = os.path.dirname( __file__ )
-mymodule_dir = os.path.join( script_dir, '..', 'src')
-sys.path.append(mymodule_dir)
-
-from transformer import CTransformer
+from src.transformer import CTransformer
 import torch
 from torch import nn 
 import torch.nn.functional as F
@@ -21,6 +14,9 @@ from torch.utils.tensorboard import SummaryWriter
 
 tbw = SummaryWriter(log_dir = './runs') # Tensorboard logging
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+print("hi i'm testing packaging")
+exit()
 
 '''
 ===============================================================================================
