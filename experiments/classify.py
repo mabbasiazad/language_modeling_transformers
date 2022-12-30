@@ -15,9 +15,6 @@ from torch.utils.tensorboard import SummaryWriter
 tbw = SummaryWriter(log_dir = './runs') # Tensorboard logging
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-print("hi i'm testing packaging")
-exit()
-
 '''
 ===============================================================================================
  load data
