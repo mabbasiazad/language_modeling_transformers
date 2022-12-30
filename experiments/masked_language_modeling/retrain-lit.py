@@ -7,7 +7,7 @@ from transformers import DataCollatorForLanguageModeling
 import collections
 import numpy as np
 from transformers import default_data_collator
-from transformers import TrainingArguments 
+from transformers import TrainingArguments
 from transformers import Trainer
 from torch.utils.data import DataLoader
 from torch.optim import AdamW
@@ -16,43 +16,50 @@ from transformers import get_scheduler
 from tqdm.auto import tqdm
 
 
-'''
+"""
 ******** defining model and tokenizer ******************
-'''
-#importing the model 
+"""
+# importing the model
 model_checkpoint = "distilbert-base-uncased"
 model = AutoModelForMaskedLM.from_pretrained(model_checkpoint)
 print("number of model parameters: ", round(model.num_parameters() / 1_000_000))
 
-#tokenizer 
+# tokenizer
 tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
 
-'''
+"""
 ******** domain adaptation ******************
-'''
+"""
 
-'''
+"""
 loading the data 
-'''
-imdb_dataset = load_dataset('imdb')
+"""
+imdb_dataset = load_dataset("imdb")
 
-'''
+"""
 preprocessing data for masked language modeling task
-'''
+"""
+
+
 def tokenizer_fn(data):
-    data_text = data['text']
+    data_text = data["text"]
     data_tokenized = tokenizer(data_text)
     return data_tokenized
 
-tokenized_datasets = imdb_dataset.map(tokenizer_fn, batched=True, remove_columns=["text", "label"])
+
+tokenized_datasets = imdb_dataset.map(
+    tokenizer_fn, batched=True, remove_columns=["text", "label"]
+)
 print(tokenized_datasets)
 # group all data together and split the result into chunks.
-print(tokenizer.model_max_length) # for this model = 512
+print(tokenizer.model_max_length)  # for this model = 512
 
-'''
+"""
 preparing lm (language modeling) dataset
-'''
+"""
 chunk_size = 128
+
+
 def group_texts(examples):
     # Concatenate all texts
     concatenated_examples = {k: sum(examples[k], []) for k in examples.keys()}
@@ -69,17 +76,20 @@ def group_texts(examples):
     result["labels"] = result["input_ids"].copy()  #!!!!!!!!!!
     return result
 
+
 lm_datasets = tokenized_datasets.map(group_texts, batched=True)
 
-'''
+"""
 defining data collator
-'''
-#Note: A data collator is just a function that takes a list of samples and converts them into a batch
-data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm_probability=0.15)
+"""
+# Note: A data collator is just a function that takes a list of samples and converts them into a batch
+data_collator = DataCollatorForLanguageModeling(
+    tokenizer=tokenizer, mlm_probability=0.15
+)
 
-'''
+"""
 splitting and down sampling the data to reduce the traning time 
-'''
+"""
 train_size = 10_000
 valid_size = int(0.1 * train_size)
 
@@ -105,20 +115,20 @@ eval_dataloader = DataLoader(
     collate_fn=data_collator,
 )
 
-'''
+"""
 Training the model (GPU required)
-'''
-#loading refresh refresh vesion of the pretrain model
-model = AutoModelForMaskedLM.from_pretrained(model_checkpoint) 
-optimizer = AdamW(model.parameters(), lr = 5e-5)
+"""
+# loading refresh refresh vesion of the pretrain model
+model = AutoModelForMaskedLM.from_pretrained(model_checkpoint)
+optimizer = AdamW(model.parameters(), lr=5e-5)
 accelerator = Accelerator()
 model, optimizer, train_dataloader, eval_dataloader = accelerator.prepare(
     model, optimizer, train_dataloader, eval_dataloader
-) 
+)
 
 # specifying the learning rate scheduler
 num_train_epochs = 1
-num_update_steps_per_epoch = len(train_dataloader) # number of batches
+num_update_steps_per_epoch = len(train_dataloader)  # number of batches
 num_training_steps = num_train_epochs * num_update_steps_per_epoch
 lr_scheduler = get_scheduler(
     "linear",
@@ -135,7 +145,7 @@ for epoch in range(num_train_epochs):
     model.train()
     for bach in train_dataloader:
         outputs = model(**bach)
-        loss = outputs.loss 
+        loss = outputs.loss
         accelerator.backward(loss)
 
         optimizer.step()
@@ -149,12 +159,12 @@ for epoch in range(num_train_epochs):
     for step, batch in enumerate(eval_dataloader):
         with torch.no_grad():
             outputs = model(**batch)
-        
+
         loss = outputs.loss
         losses.append(accelerator.gather(loss.repeat(batch_size)))
 
     losses = torch.cat(losses)
-    losses = losses[: len(downsampled_dataset["test"])]   # len eval dataset
+    losses = losses[: len(downsampled_dataset["test"])]  # len eval dataset
     try:
         perplexity = math.exp(torch.mean(losses))
     except OverflowError:
@@ -168,7 +178,3 @@ for epoch in range(num_train_epochs):
     unwrapped_model.save_pretrained(output_dir, save_function=accelerator.save)
     if accelerator.is_main_process:
         tokenizer.save_pretrained(output_dir)
-
-
-
-
