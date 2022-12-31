@@ -1,4 +1,4 @@
-This is the implemetation of transformers based on what is explained here;\\
+This is the implemetation of transformers based on what is explained here;   
 https://peterbloem.nl/blog/transformers
 
 Reference for ext classifier dataset loading and preprocessing; 
