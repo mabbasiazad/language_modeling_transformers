@@ -46,12 +46,3 @@ class CTransformer(nn.Module):
         return F.log_softmax(x, dim=1)
 
 
-# test CTransformer cladd
-# ctransformer = CTransformer(15, 8, 3, 5, 5, 2)
-# x = torch.randn(4, 5, 15)
-# res = ctransformer(x)
-# print(res.shape)
-
-# class GTransformer(nn.Module):
-#     def __init__(self):
-#         pass
