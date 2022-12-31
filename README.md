@@ -1,4 +1,4 @@
-# Trensformers
+# Trensformers application in language modeling
 
 This code is for language modeling with transformers.
 Text classification task and masked language modeling has been implemented.
