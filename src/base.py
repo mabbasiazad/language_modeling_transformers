@@ -74,7 +74,6 @@ class TransformerBlock(nn.Module):
         self.ff = nn.Sequential(nn.Linear(k, 4 * k), nn.ReLU(), nn.Linear(4 * k, k))
 
     def forward(self, x):
-        # print('x size inside transformer block', x.size())
         attended = self.selfattention(x)
         x = self.norm1(attended + x)
         feedforward = self.ff(x)

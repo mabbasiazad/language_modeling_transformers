@@ -27,6 +27,8 @@ outputs = model(**inputs)
 print("ouput of the model")
 print(outputs.logits.size())
 
+exit()
+
 mask_token_index = torch.where(inputs["input_ids"] == tokenizer.mask_token_id)[1]
 print("mask token index:", mask_token_index)
 mask_token_logits = outputs.logits[0, mask_token_index, :]

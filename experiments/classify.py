@@ -32,25 +32,23 @@ train_iter, test_iter = AG_NEWS()
 # print(next(iter(train_iter)))
 # print(next(iter(test_iter)))
 
+# next(train_iter)
+# >>> (3, "Wall St. Bears Claw Back Into the Black (Reuters) Reuters -
+# Short-sellers, Wall Street's dwindling\\band of ultra-cynics, are seeing green
+# again.")
+
+# next(train_iter)
+# >>> (3, 'Carlyle Looks Toward Commercial Aerospace (Reuters) Reuters - Private
+# investment firm Carlyle Group,\\which has a reputation for making well-timed
+# and occasionally\\controversial plays in the defense industry, has quietly
+# placed\\its bets on another part of the market.')
+
 # for label, line in train_iter:
 #     print(f"Label: {label}")
 #     print(f"Line: '{line}'")
 #     break
 
-tokenizer = get_tokenizer("basic_english")
-counter = Counter()
-seq_length = []
-for (label, line) in train_iter:
-    seq = tokenizer(line)
-    counter.update(seq)
-    seq_length.append(len(seq))
 
-for (label, line) in test_iter:
-    seq = tokenizer(line)
-    counter.update(seq)
-    seq_length.append(len(seq))
-
-vocab_dic = vocab(counter, min_freq=1, specials=["<pad>"])
 
 """
 ===============================================================================================
@@ -66,24 +64,43 @@ depth = 6  # no of transformer blocks
 num_epochs = 1
 useValidateSet = True
 num_class = len(set([label for (label, text) in train_iter]))
+
+
+"""
+===============================================================================================
+ Data preprocessing pipeline
+===============================================================================================
+"""
+# 1. The first step is to build a vocabulary with the raw training dataset.
+tokenizer = get_tokenizer("basic_english")
+counter = Counter()
+seq_length = []
+for (label, line) in train_iter:
+    seq = tokenizer(line)
+    counter.update(seq)
+    seq_length.append(len(seq))
+
+for (label, line) in test_iter:
+    seq = tokenizer(line)
+    counter.update(seq)
+    seq_length.append(len(seq))
+
+vocab_dic = vocab(counter, min_freq=1, specials=["<pad>"])
+
+#==== vocab related hyper parameters
 max_seq_lenght = max(seq_length)  # this is important for position embedding
 vocab_size = len(vocab_dic) * 2  # "this is important for token embedding"
 vocab_size = 500_000
-
 default_index = 0
 vocab_dic.set_default_index(default_index)
 
-"""
-===============================================================================================
- Data preprocessing
-===============================================================================================
-"""
+# 2. Prepare the text processing pipeline with the tokenizer and vocabulary.
 def text2ids_transform(x): return [vocab_dic[token] for token in tokenizer(x)]
 def label_transform(x): return int(x) - 1
 
 # print(text2token_transform('here is the an example'))
 
-
+# 3. Generate data batch and iterator
 def collate_batch(batch):
     label_list, text_list = [], []
 
