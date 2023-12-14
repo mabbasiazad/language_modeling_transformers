@@ -6,7 +6,7 @@ import torch.nn.functional as F
 class SelfAttention(nn.Module):
     def __init__(self, k, heads=8, mask=False):
         super().__init__()
-        self.k = k
+        self.k = k #embeding size
         self.heads = heads
         self.mask = mask
 
@@ -23,21 +23,19 @@ class SelfAttention(nn.Module):
 
         h = self.heads
 
-        keys = self.to_keys(x).view(
-            b, t, h, k
-        )  # the result before view method is (b, t, h * k)
+        keys = self.to_keys(x).view(b, t, h, k)  # the result before view method is (b, t, h * k)
         queries = self.to_queries(x).view(b, t, h, k)
         values = self.to_values(x).view(b, t, h, k)
 
         keys = keys.transpose(1, 2).contiguous().view(b * h, t, k)
-        queries = queries.transpose(1, 2).contiguous().view(b * h, t, k) / (
-            k ** (1 / 4)
-        )
+        queries = queries.transpose(1, 2).contiguous().view(b * h, t, k) 
         values = values.transpose(1, 2).contiguous().view(b * h, t, k) / (k ** (1 / 4))
 
         weights = torch.bmm(
             queries, keys.transpose(1, 2)
         )  # the result would be (b * h, t, t) dimension
+
+        weights = weights / (k ** (1 / 2))
 
         if self.mask:
             indices = torch.triu_indices(t, t, offset=1)
@@ -63,7 +61,7 @@ class SelfAttention(nn.Module):
 
 
 class TransformerBlock(nn.Module):
-    def __init__(self, k, heads, mask):
+    def __init__(self, k, heads, mask=False):
         super().__init__()
 
         self.selfattention = SelfAttention(k, heads, mask=mask)

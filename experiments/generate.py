@@ -154,9 +154,6 @@ data_train = torch.cat([data_train, data_val], dim = 0)
 # print(data_train[0:15])
 # print(decode(data_train[0:1000]))
 
-
-
-
 '''
 ============================================================================================
 Machine learning modeling
