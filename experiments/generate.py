@@ -97,7 +97,7 @@ def sample_batch(data, seq_length, batch_size):
 
     return inputs, target
 
-def genetate_sequence(model, seed, seq_length, generate_length=600, temperature=0.5, verbose=False):
+def generate_sequence(model, seed, seq_length, generate_length=600, temperature=0.5, verbose=False):
     """
     Sequentially samples a sequence from the model, token by token.
     :param model:
@@ -122,7 +122,8 @@ def genetate_sequence(model, seed, seq_length, generate_length=600, temperature=
         # Input is the tail end of the sampled sequence (as many tokens as the model can handle)
         input = sequence[-seq_length:]  #!!! this is the important trick
 
-        # Run the current input through the model
+        # Run the current input through the model 
+        # we treat the data as a single batch entery to the model
         output = model(input[None, :])
 
         # Sample the next token from the probabilitys at the last position of the output.
@@ -147,6 +148,7 @@ def enwik8(path, n_train=int(90e6), n_valid=int(5e6), n_test=int(5e6)):
         trX, vaX, teX = np.split(X, [n_train, n_train + n_valid])
         return torch.from_numpy(trX), torch.from_numpy(vaX), torch.from_numpy(teX)
 
+#note: change the current path to exprement folder
 path = './data/enwik8.gz'
 data_train, data_val, data_test = enwik8(path)
 data_train = torch.cat([data_train, data_val], dim = 0)
@@ -197,7 +199,7 @@ for i in tqdm.trange(num_iter):
             if torch.cuda.is_available():
                 seed = seed.cuda()
 
-            genetate_sequence(model, seed=seed, seq_length=SEQ_LEN, verbose=True, generate_length=600)
+            generate_sequence(model, seed=seed, seq_length=SEQ_LEN, verbose=True, generate_length=600)
 
 
 
